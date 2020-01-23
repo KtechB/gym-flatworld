@@ -1,0 +1,1 @@
+from gym_flatworld.envs.flatworld import FlatworldEnv
