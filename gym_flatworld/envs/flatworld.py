@@ -73,7 +73,7 @@ class FlatworldEnv(gym.Env):
             move_dist = action/norm  # limit max speed =1
         else:
             move_dist = action
-        next_state = self.state + move_dist
+        next_state = np.clip(self.state + move_dist, self.observasion_space.low, self.observasion_space.high) 
         reward = self._get_reward(self.state, action, next_state)
         done = False
         self.state = next_state
