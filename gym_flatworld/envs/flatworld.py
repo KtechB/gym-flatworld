@@ -3,6 +3,7 @@ import numpy as np
 import gym
 from gym import error, spaces, utils
 from gym.utils import seeding
+import time
 
 X = 10
 Y = 10
@@ -62,7 +63,7 @@ class FlatworldEnv(gym.Env):
                 being True indicates the episode has terminated. (For example,
                 perhaps the pole tipped too far, or you lost your last life.)
             info (dict) :
-                 diagnostic information useful for debugging. It can sometimes
+                 diagnosic information useful for debugging. It can sometimes
                  be useful for learning (for example, it might contain the raw
                  probabilities behind the environment's last state change).
                  However, official evaluations of your agent are not allowed to
@@ -97,10 +98,10 @@ class FlatworldEnv(gym.Env):
 
     def render(self, mode='human'):
         screen_width = 600
-        screen_height = 400
+        screen_height = 600
 
-        world_width = X
-        scale = screen_width/world_width
+        world_width = 2 * X
+        scale = screen_width/world_width 
         carwidth = 40
         carheight = 20
 
@@ -108,20 +109,22 @@ class FlatworldEnv(gym.Env):
             from gym.envs.classic_control import rendering
             self.viewer = rendering.Viewer(screen_width, screen_height)
 
-            xs = np.linspace(-X, X, 100) - X
-            ys = np.linspace(-Y, Y, 100) - Y
-            lines = [list(zip((xs)*scale, 2*Y*scale)),
-                     list(zip((xs)*scale, 0)),
-                     list(zip(2*X*scale, (ys)*scale)),
-                     list(zip(0, (ys)*scale))]
-
+            xs = np.linspace(-X, X, 100) - X 
+            ys = np.linspace(-Y, Y, 100) - Y - 5
+            ones_x = np.ones_like(xs)
+            ones_y = np.ones_like(ys)
+            lines = [list(zip((xs)*scale, 2*Y*scale* ones_x)),
+                     list(zip((xs)*scale, 0* ones_x)),
+                     list(zip(2*X*scale * ones_y, (ys)*scale)),
+                     list(zip(0* ones_y, (ys)*scale))]
             for line in lines:
                 xys = line
-                self.track = rendering.make_polyline(xys)
-                self.track.set_linewidth(4)
-                self.viewer.add_geom(self.track)
-            #clearance = 10
-            agent_size = 3
+                track = rendering.make_polyline(xys)
+                track.set_linewidth(4)
+                track.set_color(0, .5, 0)
+                self.viewer.add_geom(track)
+			#clearance = 10
+            agent_size = 5
             agent = rendering.make_circle(agent_size, filled=True)
             self.agenttrans = rendering.Transform(
                 translation=(0, 0))  # translation = (dx,dy)ずらす
@@ -156,8 +159,9 @@ class FlatworldEnv(gym.Env):
                 [(flagx, flagy2), (flagx, flagy2-8), (flagx+20, flagy2-4)])
             flag.set_color(.8, .8, 0)
             self.viewer.add_geom(flag)
-
+            print(self.viewer)
         pos = self.state
+        print(self.viewer.geoms, self.viewer.onetime_geoms)
         self.agenttrans.set_translation(
             (pos[0] + X) * scale, (pos[1] + Y) * scale)
 
@@ -184,4 +188,3 @@ if __name__ == "__main__":
         total_r += r
         print(f"action:{a},s_t:{s_before} ,s_t+1:{s}, reward:{r}, Done:{done}")
         #rgb = env.render(mode = "rgb_array")
-    print(f"total reward:{total_r}")
