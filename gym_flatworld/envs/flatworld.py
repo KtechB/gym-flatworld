@@ -7,14 +7,8 @@ import time
 
 X = 10
 Y = 10
-
+SPEED_SCALE = 0.5
 GOAL = np.array([0, 0])
-Dims = [2,2,2]
-def sigmoid(x):
-    return 1/(1 + np.exp(-x))
-def Linear_sig(x,w):
-    y = sigmoid(np.dot(w, x))
-    return y 
 class FlatworldEnv(gym.Env):
     metadata = {'render.modes': ['human'],
                 'video.frames_per_second': 30}
@@ -71,19 +65,23 @@ class FlatworldEnv(gym.Env):
                  However, official evaluations of your agent are not allowed to
                  use this for learning.
         """
-        x, y = self.state
-        a_x, a_y = action
-        norm = np.linalg.norm(action)
-        if norm > 1:
-            move_dist = action/norm  # limit max speed =1
-        else:
-            move_dist = action
-        next_state = np.clip(self.state + move_dist, self.observation_space.low, self.observation_space.high) 
+        next_state =self._get_next_state(self.state, action)
         reward = self._get_reward(self.state, action, next_state)
         done = False
         self.state = next_state
         return self.state, reward, done, {}
 
+
+    def _get_next_state(self, state, action):
+        x, y = state
+        a_x, a_y = action
+        norm = np.linalg.norm(action)
+        if norm > 1:
+            move_dist = SPEED_SCALE*action/norm  # limit max speed =1
+        else:
+            move_dist = SPEED_SCALE * action
+        next_state = np.clip(self.state + move_dist, self.observation_space.low, self.observation_space.high) 
+        return next_state 
     def _get_reward(self, state, action, next_state):
         lower_bound = -10
         reward = - np.square(next_state - GOAL).sum() / X
@@ -169,17 +167,20 @@ class FlatworldEnv(gym.Env):
         if self.viewer:
             self.viewer.close()
             self.viewer = None
-
-
+    
+    def ideal_action(self):
+        a_x, a_y = np.clip(-self.state.copy()/SPEED_SCALE,self.action_min, self.action_max) 
+        return (a_x, a_y)
+        
+                
 if __name__ == "__main__":
-    env = FlatworldEnv(seed=0)
+    env = FlatworldEnv(seed=42)
     s = env.reset()
+    total_r = 0
     for i in range(100):
-        a = env.action_space.sample()
+        a = env.ideal_action()
         s_before = s
         s, r, done, info = env.step(a)
-        #print(a, s_before ,s, r, done, s-(a+s_before))
-        env.render()
-        time.sleep(0.1)
-        if i%10==0:
-            print(i)
+        total_r += r
+        print(f"action:{a},s_t:{s_before} ,s_t+1:{s}, reward:{r}, Done:{done}")
+        #rgb = env.render(mode = "rgb_array")
