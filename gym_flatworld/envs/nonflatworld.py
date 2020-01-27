@@ -5,11 +5,13 @@ from gym import error, spaces, utils
 from gym.utils import seeding
 import time
 
-X = 10
-Y = 10
+
 
 GOAL = np.array([0, 0])
-Dims = [2,2,2]
+DIM = 2
+OBS_DIM = 5
+DIMS = [DIM,2,OBS_DIM]
+W_SCALE = [10 for i in range(DIM)]
 def sigmoid(x):
     return 1/(1 + np.exp(-x))
 def Linear_sig(x,w):
@@ -21,23 +23,27 @@ class FlatworldEnv(gym.Env):
 
     def __init__(self, seed=0):
 
-        self.state_low = np.array([-X, -Y])
-        self.state_high = np.array([X, Y])
-        self.action_min = np.array([-1, -1])
-        self.action_max = np.array([1, 1])
+        self.state_low =- np.ones(OBS_DIM)
+        self.state_high = np.ones(OBS_DIM)
+        self.obs_low =- np.array(W_SCALE)
+        self.obs_high = np.array(W_SCALE)
+        self.action_min =- np.ones(DIM)
+        self.action_max = np.ones(DIM)
+
 
         self.viewer = None
-
         self.action_space = spaces.Box(low=self.action_min, high=self.action_max,
                                        dtype=np.float32)
-        self.observation_space = spaces.Box(low=self.state_low, high=self.state_high,
+        self.observation_space = spaces.Box(low=self.obs_low, high=self.obs_high,
                                             dtype=np.float32)
 
+        self.state_space= spaces.Box(low=self.state_low, high=self.state_high,
+                                            dtype=np.float32)
         self.seed(seed)
         self.reset()
 
     def init_state(self):
-        return np.random.uniform(low=self.state_low, high=self.state_high, size=2)
+        return np.random.uniform(low=self.state_low, high=self.state_high, size=DIM)
 
     def seed(self, seed=42):
         np.random.seed(seed)
@@ -92,6 +98,7 @@ class FlatworldEnv(gym.Env):
 
     def reset(self):
         self.state = self.init_state()
+        
         return self.state
 
     def render(self, mode='human'):
