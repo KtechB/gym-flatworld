@@ -9,6 +9,7 @@ X = 10
 Y = 10
 SPEED_SCALE = 0.5
 GOAL = np.array([0, 0])
+
 class FlatworldEnv(gym.Env):
     metadata = {'render.modes': ['human'],
                 'video.frames_per_second': 30}
@@ -73,15 +74,15 @@ class FlatworldEnv(gym.Env):
 
 
     def _get_next_state(self, state, action):
-        x, y = state
-        a_x, a_y = action
         norm = np.linalg.norm(action)
         if norm > 1:
-            move_dist = SPEED_SCALE*action/norm  # limit max speed =1
+            move_dist = SPEED_SCALE*(action/norm)  # limit max speed =1
         else:
             move_dist = SPEED_SCALE * action
-        next_state = np.clip(self.state + move_dist, self.observation_space.low, self.observation_space.high) 
+        next_state = np.clip(state + move_dist, self.observation_space.low, self.observation_space.high) 
         return next_state 
+
+
     def _get_reward(self, state, action, next_state):
         lower_bound = -10
         reward = - np.square(next_state - GOAL).sum() / X
@@ -168,9 +169,13 @@ class FlatworldEnv(gym.Env):
             self.viewer.close()
             self.viewer = None
     
-    def ideal_action(self):
-        a_x, a_y = np.clip(-self.state.copy()/SPEED_SCALE,self.action_min, self.action_max) 
-        return (a_x, a_y)
+    def ideal_action(self, state=None):
+        if state is None:
+            a = np.clip(-self.state/SPEED_SCALE,self.action_min, self.action_max) 
+        else: 
+            a = np.clip(- state/SPEED_SCALE,self.action_min, self.action_max) 
+
+        return a
         
                 
 if __name__ == "__main__":
@@ -178,7 +183,7 @@ if __name__ == "__main__":
     s = env.reset()
     total_r = 0
     for i in range(100):
-        a = env.ideal_action()
+        a = env.ideal_action(s)
         s_before = s
         s, r, done, info = env.step(a)
         total_r += r
