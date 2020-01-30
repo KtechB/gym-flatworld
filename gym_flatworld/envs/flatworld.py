@@ -171,9 +171,12 @@ class FlatworldEnv(gym.Env):
     
     def ideal_action(self, state=None):
         if state is None:
-            a = np.clip(-self.state/SPEED_SCALE,self.action_min, self.action_max) 
-        else: 
-            a = np.clip(- state/SPEED_SCALE,self.action_min, self.action_max) 
+            state = self.state
+        dist = np.linalg.norm(state)
+        if dist < SPEED_SCALE:
+            a = -state/SPEED_SCALE
+        else:
+            a = -state /(dist * SPEED_SCALE)
 
         return a
         
