@@ -179,9 +179,10 @@ class FlatworldEnv(gym.Env):
             a = -state /(dist * SPEED_SCALE)
 
         return a
-        
-                
-if __name__ == "__main__":
+    def close(self):
+        pass    
+
+def test_run():
     env = FlatworldEnv(seed=42)
     s = env.reset()
     total_r = 0
@@ -190,5 +191,18 @@ if __name__ == "__main__":
         s_before = s
         s, r, done, info = env.step(a)
         total_r += r
-        print(f"action:{a},s_t:{s_before} ,s_t+1:{s}, reward:{r}, Done:{done}")
+    return True
+     
+
+                
+if __name__ == "__main__":
+    env = flatworldenv(seed=42)
+    s = env.reset()
+    total_r = 0
+    for i in range(100):
+        a = env.ideal_action(s)
+        s_before = s
+        s, r, done, info = env.step(a)
+        total_r += r
+        print(f"action:{a},s_t:{s_before} ,s_t+1:{s}, reward:{r}, done:{done}")
         #rgb = env.render(mode = "rgb_array")
