@@ -9,6 +9,9 @@ X = 10
 Y = 10
 SPEED_SCALE = 0.5
 GOAL = np.array([0, 0])
+Terminal = True
+eps = X * 1e-5
+
 
 class FlatworldEnv(gym.Env):
     metadata = {'render.modes': ['human'],
@@ -68,10 +71,19 @@ class FlatworldEnv(gym.Env):
         """
         next_state =self._get_next_state(self.state, action)
         reward = self._get_reward(self.state, action, next_state)
-        done = False
+        if self._is_terminal_state(next_state):
+            done = True 
+        else:
+            done = False
+
         self.state = next_state
         return self.state, reward, done, {}
 
+    def _is_terminal_state(self, state):
+        if np.abs(state).all() < eps:
+            return True
+        else:
+            return False
 
     def _get_next_state(self, state, action):
         norm = np.linalg.norm(action)
