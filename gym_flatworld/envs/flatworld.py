@@ -9,7 +9,7 @@ X = 10
 Y = 10
 SPEED_SCALE = 0.5
 GOAL = np.array([0, 0])
-Terminal = True
+Terminal = False
 eps = X * 1e-5
 
 
@@ -71,8 +71,11 @@ class FlatworldEnv(gym.Env):
         """
         next_state =self._get_next_state(self.state, action)
         reward = self._get_reward(self.state, action, next_state)
-        if self._is_terminal_state(next_state):
-            done = True 
+        if Terminal:
+            if self._is_terminal_state(next_state):
+                done = True 
+            else:
+                done = False
         else:
             done = False
 
@@ -104,7 +107,13 @@ class FlatworldEnv(gym.Env):
     def reset(self):
         self.state = self.init_state()
         return self.state
+    
 
+    def set_init_state(self, s):
+        assert self.observation_space.contains(s)
+        self.state = s
+        return self.state
+    
     def render(self, mode='human'):
         screen_width = 600
         screen_height = 600
@@ -168,7 +177,6 @@ class FlatworldEnv(gym.Env):
                 [(flagx, flagy2), (flagx, flagy2-8), (flagx+20, flagy2-4)])
             flag.set_color(.8, .8, 0)
             self.viewer.add_geom(flag)
-            print(self.viewer)
         pos = self.state
         print(self.viewer.geoms, self.viewer.onetime_geoms)
         self.agenttrans.set_translation(
