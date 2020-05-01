@@ -182,7 +182,6 @@ class FlatworldEnv(gym.Env):
             flag.set_color(.8, .8, 0)
             self.viewer.add_geom(flag)
         pos = self.state
-        print(self.viewer.geoms, self.viewer.onetime_geoms)
         self.agenttrans.set_translation(
             (pos[0] + X) * scale, (pos[1] + Y) * scale)
 
