@@ -10,3 +10,8 @@ you can create an instance of the environment with
 ```
 gym.make('gym_flatworld:Flatworld-v0')
 ```
+
+# version
+Flatworld-v0: default goal = (0,0) 
+
+FlatworldMultiGoal

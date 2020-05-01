@@ -18,6 +18,7 @@ class FlatworldEnv(gym.Env):
                 'video.frames_per_second': 30}
 
     def __init__(self, seed=0):
+        self.GOAL = np.array([0,0]) # set goal state (0, 0)
 
         self.state_low = np.array([-X, -Y])
         self.state_high = np.array([X, Y])
@@ -33,6 +34,10 @@ class FlatworldEnv(gym.Env):
 
         self.seed(seed)
         self.reset()
+    
+    def set_goal(self, goal):
+        assert self.observation_space.contains(goal), "goal must be np.array with shape (2,)"
+        self.GOAL = goal
 
     def init_state(self):
         return np.random.uniform(low=self.state_low, high=self.state_high, size=2)
@@ -69,18 +74,18 @@ class FlatworldEnv(gym.Env):
                  However, official evaluations of your agent are not allowed to
                  use this for learning.
         """
-        next_state =self._get_next_state(self.state, action)
+        next_state = self._get_next_state(self.state, action)
         reward = self._get_reward(self.state, action, next_state)
         if Terminal:
             if self._is_terminal_state(next_state):
-                done = True 
+                done = True
             else:
                 done = False
         else:
             done = False
 
         self.state = next_state
-        return self.state, reward, done, {}
+        return self.state, reward, done, {"goal":self.GOAL}
 
     def _is_terminal_state(self, state):
         if np.abs(state).all() < eps:
@@ -94,32 +99,31 @@ class FlatworldEnv(gym.Env):
             move_dist = SPEED_SCALE*(action/norm)  # limit max speed =1
         else:
             move_dist = SPEED_SCALE * action
-        next_state = np.clip(state + move_dist, self.observation_space.low, self.observation_space.high) 
-        return next_state 
-
+        next_state = np.clip(
+            state + move_dist, self.observation_space.low, self.observation_space.high)
+        return next_state
 
     def _get_reward(self, state, action, next_state):
         lower_bound = -10
-        reward = - np.square(next_state - GOAL).sum() / X
+        reward = - np.square(next_state - self.GOAL).sum() / X
         reward = max(reward, lower_bound)
         return reward
 
     def reset(self):
         self.state = self.init_state()
         return self.state
-    
 
     def set_init_state(self, s):
         assert self.observation_space.contains(s)
         self.state = s
         return self.state
-    
+
     def render(self, mode='human'):
         screen_width = 600
         screen_height = 600
 
         world_width = 2 * X
-        scale = screen_width/world_width 
+        scale = screen_width/world_width
         carwidth = 40
         carheight = 20
 
@@ -127,21 +131,21 @@ class FlatworldEnv(gym.Env):
             from gym.envs.classic_control import rendering
             self.viewer = rendering.Viewer(screen_width, screen_height)
 
-            xs = np.linspace(-X, X, 100) - X 
+            xs = np.linspace(-X, X, 100) - X
             ys = np.linspace(-Y, Y, 100) - Y - 5
             ones_x = np.ones_like(xs)
             ones_y = np.ones_like(ys)
-            lines = [list(zip((xs)*scale, 2*Y*scale* ones_x)),
-                     list(zip((xs)*scale, 0* ones_x)),
+            lines = [list(zip((xs)*scale, 2*Y*scale * ones_x)),
+                     list(zip((xs)*scale, 0 * ones_x)),
                      list(zip(2*X*scale * ones_y, (ys)*scale)),
-                     list(zip(0* ones_y, (ys)*scale))]
+                     list(zip(0 * ones_y, (ys)*scale))]
             for line in lines:
                 xys = line
                 track = rendering.make_polyline(xys)
                 track.set_linewidth(4)
                 track.set_color(0, .5, 0)
                 self.viewer.add_geom(track)
-			#clearance = 10
+                #clearance = 10
             agent_size = 5
             agent = rendering.make_circle(agent_size, filled=True)
             self.agenttrans = rendering.Transform(
@@ -168,8 +172,8 @@ class FlatworldEnv(gym.Env):
             backwheel.set_color(.5, .5, .5)
             self.viewer.add_geom(backwheel)
             """
-            flagx = (GOAL[0]+X)*scale
-            flagy1 = (GOAL[1] + Y) * scale
+            flagx = (self.GOAL[0]+X)*scale
+            flagy1 = (self.GOAL[1] + Y) * scale
             flagy2 = flagy1 + 20
             flagpole = rendering.Line((flagx, flagy1), (flagx, flagy2))
             self.viewer.add_geom(flagpole)
@@ -188,19 +192,23 @@ class FlatworldEnv(gym.Env):
         if self.viewer:
             self.viewer.close()
             self.viewer = None
-    
+
     def ideal_action(self, state=None):
         if state is None:
             state = self.state
-        dist = np.linalg.norm(state)
+            
+        from_goal = self.state - self.GOAL
+        dist = np.linalg.norm(from_goal)
         if dist < SPEED_SCALE:
-            a = -state/SPEED_SCALE
+            a = -from_goal/SPEED_SCALE
         else:
-            a = -state /(dist * SPEED_SCALE)
+            a = -from_goal / (dist * SPEED_SCALE)
 
         return a
+
     def close(self):
-        pass    
+        pass
+
 
 def test_run():
     env = FlatworldEnv(seed=42)
@@ -212,17 +220,18 @@ def test_run():
         s, r, done, info = env.step(a)
         total_r += r
     return True
-     
 
-                
+
 if __name__ == "__main__":
-    env = flatworldenv(seed=42)
+    env = FlatworldEnv(seed=42)
+    env.set_goal([1,5])
     s = env.reset()
     total_r = 0
+    
     for i in range(100):
         a = env.ideal_action(s)
         s_before = s
         s, r, done, info = env.step(a)
         total_r += r
-        print(f"action:{a},s_t:{s_before} ,s_t+1:{s}, reward:{r}, done:{done}")
+        print(f"action:{a},s_t:{s_before} ,s_t+1:{s}, reward:{r}, done:{done}, info:{info}")
         #rgb = env.render(mode = "rgb_array")
