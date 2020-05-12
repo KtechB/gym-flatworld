@@ -17,3 +17,4 @@ for i in range(120):
     time.sleep(0.20)
     env.render(mode = "rgb_array") 
     print(i)
+

@@ -18,7 +18,7 @@ class FlatworldEnv(gym.Env):
                 'video.frames_per_second': 30}
 
     def __init__(self, seed=0):
-        self.GOAL = np.array([0,0]) # set goal state (0, 0)
+        self.GOAL = np.array([0, 0])  # set goal state (0, 0)
 
         self.state_low = np.array([-X, -Y])
         self.state_high = np.array([X, Y])
@@ -34,9 +34,10 @@ class FlatworldEnv(gym.Env):
 
         self.seed(seed)
         self.reset()
-    
+
     def set_goal(self, goal):
-        assert self.observation_space.contains(goal), "goal must be np.array with shape (2,)"
+        assert self.observation_space.contains(
+            goal), "goal must be np.array with shape (2,)"
         self.GOAL = goal
 
     def init_state(self):
@@ -85,7 +86,7 @@ class FlatworldEnv(gym.Env):
             done = False
 
         self.state = next_state
-        return self.state, reward, done, {"goal":self.GOAL}
+        return self.state, reward, done, {"goal": self.GOAL}
 
     def _is_terminal_state(self, state):
         if np.abs(state).all() < eps:
@@ -118,7 +119,7 @@ class FlatworldEnv(gym.Env):
         self.state = s
         return self.state
 
-    def render(self, mode='human'):
+    def render(self, mode='human', **kwargs):
         screen_width = 600
         screen_height = 600
 
@@ -133,6 +134,8 @@ class FlatworldEnv(gym.Env):
 
             xs = np.linspace(-X, X, 100) - X
             ys = np.linspace(-Y, Y, 100) - Y - 5
+            x_scaled = X * scale
+            y_scaled = Y * scale
             ones_x = np.ones_like(xs)
             ones_y = np.ones_like(ys)
             lines = [list(zip((xs)*scale, 2*Y*scale * ones_x)),
@@ -145,7 +148,7 @@ class FlatworldEnv(gym.Env):
                 track.set_linewidth(4)
                 track.set_color(0, .5, 0)
                 self.viewer.add_geom(track)
-                #clearance = 10
+                # clearance = 10
             agent_size = 5
             agent = rendering.make_circle(agent_size, filled=True)
             self.agenttrans = rendering.Transform(
@@ -153,6 +156,17 @@ class FlatworldEnv(gym.Env):
             agent.add_attr(self.agenttrans)
             agent.set_color(.9, .5, .5)
             self.viewer.add_geom(agent)
+            horizontal_line = rendering.Line((0, y_scaled), (2*x_scaled, y_scaled))
+            self.viewer.add_geom(horizontal_line)
+            for i in range(20):
+                pos_x = i * scale
+                line_length = 3 if i%2 ==0 else 1
+                
+                    
+                flagpole = rendering.Line(
+                (pos_x, y_scaled-line_length), (pos_x, y_scaled+ line_length))
+                
+                self.viewer.add_geom(flagpole)
 
             """
             l,r,t,b = -carwidth/2, carwidth/2, carheight, 0
@@ -172,16 +186,38 @@ class FlatworldEnv(gym.Env):
             backwheel.set_color(.5, .5, .5)
             self.viewer.add_geom(backwheel)
             """
+            flag_size = 7
+
+            flag = rendering.make_circle(flag_size, filled=True)
+            self.flagtrans = rendering.Transform(
+                translation=(0, 0))  # translation = (dx,dy)ずらす
+            flag.add_attr(self.flagtrans)
+            flag.set_color(.5, .9, .9)
+            self.viewer.add_geom(flag)
+            """
+            self.flagtrans = rendering.Transform(
+                )
             flagx = (self.GOAL[0]+X)*scale
+            print(self.GOAL)
             flagy1 = (self.GOAL[1] + Y) * scale
             flagy2 = flagy1 + 20
             flagpole = rendering.Line((flagx, flagy1), (flagx, flagy2))
+            flagpole.add_attr(rendering.Transform(translation=(0, 0.1)))
+            flagpole.add_attr(self.flagtrans)
+
             self.viewer.add_geom(flagpole)
             flag = rendering.FilledPolygon(
                 [(flagx, flagy2), (flagx, flagy2-8), (flagx+20, flagy2-4)])
             flag.set_color(.8, .8, 0)
+
+            flag.add_attr(self.flagtrans)
             self.viewer.add_geom(flag)
+            """
+
         pos = self.state
+        self.flagtrans.set_translation(
+            (self.GOAL[0]+X)*scale, (self.GOAL[1] + Y) * scale
+        )
         self.agenttrans.set_translation(
             (pos[0] + X) * scale, (pos[1] + Y) * scale)
 
@@ -195,7 +231,7 @@ class FlatworldEnv(gym.Env):
     def ideal_action(self, state=None):
         if state is None:
             state = self.state
-            
+
         from_goal = self.state - self.GOAL
         dist = np.linalg.norm(from_goal)
         if dist < SPEED_SCALE:
@@ -223,14 +259,15 @@ def test_run():
 
 if __name__ == "__main__":
     env = FlatworldEnv(seed=42)
-    env.set_goal([1,5])
+    env.set_goal([1, 5])
     s = env.reset()
     total_r = 0
-    
+
     for i in range(100):
         a = env.ideal_action(s)
         s_before = s
         s, r, done, info = env.step(a)
         total_r += r
-        print(f"action:{a},s_t:{s_before} ,s_t+1:{s}, reward:{r}, done:{done}, info:{info}")
-        #rgb = env.render(mode = "rgb_array")
+        print(
+            f"action:{a},s_t:{s_before} ,s_t+1:{s}, reward:{r}, done:{done}, info:{info}")
+        # rgb = env.render(mode = "rgb_array")
