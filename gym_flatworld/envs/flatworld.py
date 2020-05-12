@@ -11,7 +11,8 @@ SPEED_SCALE = 0.5 * 0.1
 GOAL = np.array([0, 0])
 Terminal = False
 eps = X * 1e-5
-
+y_start = -0.5
+goal_line_y = 0.5
 
 class FlatworldEnv(gym.Env):
     metadata = {'render.modes': ['human'],
@@ -41,7 +42,11 @@ class FlatworldEnv(gym.Env):
         self.GOAL = goal
 
     def init_state(self):
-        return np.random.uniform(low=self.state_low, high=self.state_high, size=2)
+        # np.random.uniform(low=self.state_low, high=self.state_high, size=2)
+        x_start = np.random.uniform(
+            low=self.state_low[0], high=self.state_high[0], size=1)
+
+        return np.array([x_start, y_start])
 
     def seed(self, seed=42):
         np.random.seed(seed)
@@ -77,7 +82,7 @@ class FlatworldEnv(gym.Env):
         """
         next_state = self._get_next_state(self.state, action)
         reward = self._get_reward(self.state, action, next_state)
-        
+
         if Terminal:
             if self._is_terminal_state(next_state):
                 done = True
@@ -155,16 +160,17 @@ class FlatworldEnv(gym.Env):
             agent.add_attr(self.agenttrans)
             agent.set_color(.9, .5, .5)
             self.viewer.add_geom(agent)
+            
             horizontal_line = rendering.Line(
-                (0, y_scaled), (2*x_scaled, y_scaled))
+                (0, (Y+goal_line_y)*scale), (2*x_scaled, (Y + goal_line_y)*scale))
             self.viewer.add_geom(horizontal_line)
             for i in range(20):
-                
+
                 pos_x = i * (screen_width/20)
                 line_length = 3 if i % 2 == 0 else 1
 
                 flagpole = rendering.Line(
-                    (pos_x, y_scaled-line_length), (pos_x, y_scaled + line_length))
+                    (pos_x , (Y+ goal_line_y)*scale -line_length), (pos_x, (Y+goal_line_y)*scale + line_length))
 
                 self.viewer.add_geom(flagpole)
 
@@ -220,9 +226,6 @@ class FlatworldEnv(gym.Env):
             a = -from_goal / (dist * SPEED_SCALE)
 
         return a
-
-    def close(self):
-        pass
 
 
 def test_run():
