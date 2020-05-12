@@ -5,9 +5,9 @@ from gym import error, spaces, utils
 from gym.utils import seeding
 import time
 
-X = 10
-Y = 10
-SPEED_SCALE = 0.5
+X = 1
+Y = 1
+SPEED_SCALE = 0.5 * 0.1
 GOAL = np.array([0, 0])
 Terminal = False
 eps = X * 1e-5
@@ -77,6 +77,7 @@ class FlatworldEnv(gym.Env):
         """
         next_state = self._get_next_state(self.state, action)
         reward = self._get_reward(self.state, action, next_state)
+        
         if Terminal:
             if self._is_terminal_state(next_state):
                 done = True
@@ -125,8 +126,6 @@ class FlatworldEnv(gym.Env):
 
         world_width = 2 * X
         scale = screen_width/world_width
-        carwidth = 40
-        carheight = 20
 
         if self.viewer is None:
             from gym.envs.classic_control import rendering
@@ -156,36 +155,19 @@ class FlatworldEnv(gym.Env):
             agent.add_attr(self.agenttrans)
             agent.set_color(.9, .5, .5)
             self.viewer.add_geom(agent)
-            horizontal_line = rendering.Line((0, y_scaled), (2*x_scaled, y_scaled))
+            horizontal_line = rendering.Line(
+                (0, y_scaled), (2*x_scaled, y_scaled))
             self.viewer.add_geom(horizontal_line)
             for i in range(20):
-                pos_x = i * scale
-                line_length = 3 if i%2 ==0 else 1
                 
-                    
+                pos_x = i * (screen_width/20)
+                line_length = 3 if i % 2 == 0 else 1
+
                 flagpole = rendering.Line(
-                (pos_x, y_scaled-line_length), (pos_x, y_scaled+ line_length))
-                
+                    (pos_x, y_scaled-line_length), (pos_x, y_scaled + line_length))
+
                 self.viewer.add_geom(flagpole)
 
-            """
-            l,r,t,b = -carwidth/2, carwidth/2, carheight, 0
-            car = rendering.FilledPolygon([(l,b), (l,t), (r,t), (r,b)])
-            car.add_attr(rendering.Transform(translation=(0, clearance)))
-            self.cartrans = rendering.Transform()
-            car.add_attr(self.cartrans)
-            self.viewer.add_geom(car)
-            frontwheel = rendering.make_circle(carheight/2.5)
-            frontwheel.set_color(.5, .5, .5)
-            frontwheel.add_attr(rendering.Transform(translation=(carwidth/4,clearance)))#移動
-            frontwheel.add_attr(self.cartrans)
-            self.viewer.add_geom(frontwheel)
-            backwheel = rendering.make_circle(carheight/2.5)
-            backwheel.add_attr(rendering.Transform(translation=(-carwidth/4,clearance)))
-            backwheel.add_attr(self.cartrans)
-            backwheel.set_color(.5, .5, .5)
-            self.viewer.add_geom(backwheel)
-            """
             flag_size = 7
 
             flag = rendering.make_circle(flag_size, filled=True)
@@ -213,14 +195,12 @@ class FlatworldEnv(gym.Env):
             flag.add_attr(self.flagtrans)
             self.viewer.add_geom(flag)
             """
-
         pos = self.state
         self.flagtrans.set_translation(
             (self.GOAL[0]+X)*scale, (self.GOAL[1] + Y) * scale
         )
         self.agenttrans.set_translation(
             (pos[0] + X) * scale, (pos[1] + Y) * scale)
-
         return self.viewer.render(return_rgb_array=mode == 'rgb_array')
 
     def close(self):
