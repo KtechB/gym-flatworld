@@ -39,6 +39,7 @@ class FlatworldEnv(gym.Env):
     def set_goal(self, goal):
         assert self.observation_space.contains(
             goal), "goal must be np.array with shape (2,)"
+
         self.GOAL = goal
 
     def init_state(self):
@@ -46,7 +47,7 @@ class FlatworldEnv(gym.Env):
         x_start = np.random.uniform(
             low=self.state_low[0], high=self.state_high[0], size=1)
 
-        return np.array([x_start, y_start])
+        return np.array([float(x_start), y_start])
 
     def seed(self, seed=42):
         np.random.seed(seed)
@@ -111,8 +112,8 @@ class FlatworldEnv(gym.Env):
         return next_state
 
     def _get_reward(self, state, action, next_state):
-        lower_bound = -10
-        reward = - np.square(next_state - self.GOAL).sum() / X
+        lower_bound = -5
+        reward = - np.square((next_state - self.GOAL)*5).sum() / X
         reward = max(reward, lower_bound)
         return reward
 
@@ -223,7 +224,7 @@ class FlatworldEnv(gym.Env):
         if dist < SPEED_SCALE:
             a = -from_goal/SPEED_SCALE
         else:
-            a = -from_goal / (dist * SPEED_SCALE)
+            a = -from_goal / (dist)
 
         return a
 
@@ -242,7 +243,7 @@ def test_run():
 
 if __name__ == "__main__":
     env = FlatworldEnv(seed=42)
-    env.set_goal([1, 5])
+    env.set_goal([0, 0])
     s = env.reset()
     total_r = 0
 
