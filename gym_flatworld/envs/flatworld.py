@@ -19,7 +19,7 @@ class FlatworldEnv(gym.Env):
                 'video.frames_per_second': 30}
 
     def __init__(self, seed=0):
-        self.GOAL = np.array([0, 0])  # set goal state (0, 0)
+        self.GOAL = np.array([0, 0.5])  # set goal state (0, 0)
 
         self.state_low = np.array([-X, -Y])
         self.state_high = np.array([X, Y])
