@@ -3,7 +3,7 @@ import time
 
 
 env = gym.make('gym_flatworld:Flatworld-v2')
-env.set_goal([0.1,0.5])
+#env.set_goal([0.1,0.5])
 s = env.reset()
 total_r = 0
 
