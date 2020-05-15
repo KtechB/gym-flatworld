@@ -1,2 +1,2 @@
-from gym_flatworld.envs.flatworld import FlatworldEnv
+from gym_flatworld.envs.flatworld import FlatworldEnv, FlatworldEnvV3
 from gym_flatworld.envs.flatworld_large import FlatworldLargeEnv

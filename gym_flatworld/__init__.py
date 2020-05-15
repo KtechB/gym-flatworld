@@ -20,5 +20,5 @@ register(
 
 register(
     id='Flatworld-v3',
-    entry_point='gym_flatworld.envs:FlatworldEnv',
+    entry_point='gym_flatworld.envs:FlatworldEnvV3',
     max_episode_steps=70)

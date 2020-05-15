@@ -4,6 +4,7 @@ import gym
 from gym import error, spaces, utils
 from gym.utils import seeding
 import time
+import random
 
 X = 1
 Y = 1
@@ -11,15 +12,16 @@ SPEED_SCALE = 0.5 * 0.1
 GOAL = np.array([0, 0])
 Terminal = False
 eps = X * 1e-5
-y_start = -0.5
-goal_line_y = 0.5
+
 
 class FlatworldEnv(gym.Env):
     metadata = {'render.modes': ['human'],
                 'video.frames_per_second': 30}
-
+    goal_line_y = 0.5
+    y_start = -0.5
     def __init__(self, seed=0):
-        self.GOAL = np.array([0, 0.5])  # set goal state (0, 0)
+        
+        self.GOAL = np.array([0, 0.5])
 
         self.state_low = np.array([-X, -Y])
         self.state_high = np.array([X, Y])
@@ -47,7 +49,7 @@ class FlatworldEnv(gym.Env):
         x_start = np.random.uniform(
             low=self.state_low[0], high=self.state_high[0], size=1)
 
-        return np.array([float(x_start), y_start])
+        return np.array([float(x_start), self.y_start])
 
     def seed(self, seed=42):
         np.random.seed(seed)
@@ -161,9 +163,9 @@ class FlatworldEnv(gym.Env):
             agent.add_attr(self.agenttrans)
             agent.set_color(.9, .5, .5)
             self.viewer.add_geom(agent)
-            
+
             horizontal_line = rendering.Line(
-                (0, (Y+goal_line_y)*scale), (2*x_scaled, (Y + goal_line_y)*scale))
+                (0, (Y+self.goal_line_y)*scale), (2*x_scaled, (Y + self.goal_line_y)*scale))
             self.viewer.add_geom(horizontal_line)
             for i in range(20):
 
@@ -171,7 +173,7 @@ class FlatworldEnv(gym.Env):
                 line_length = 3 if i % 2 == 0 else 1
 
                 flagpole = rendering.Line(
-                    (pos_x , (Y+ goal_line_y)*scale -line_length), (pos_x, (Y+goal_line_y)*scale + line_length))
+                    (pos_x, (Y + self.goal_line_y)*scale - line_length), (pos_x, (Y+self.goal_line_y)*scale + line_length))
 
                 self.viewer.add_geom(flagpole)
 
@@ -228,6 +230,21 @@ class FlatworldEnv(gym.Env):
 
         return a
 
+class FlatworldEnvV3(FlatworldEnv):
+
+    goal_line_y = 0
+    y_start = 0.8
+    def __init__(self, seed=0):
+        super().__init__(seed=seed)
+        self.GOAL = np.array([0,0])
+    def init_state(self):
+        # np.random.uniform(low=self.state_low, high=self.state_high, size=2)
+        x_start = np.random.uniform(
+            low=self.state_low[0], high=self.state_high[0], size=1)
+        y = self.y_start * random.choice([-1, 1])
+        return np.array([float(x_start), y])
+
+
 
 def test_run():
     env = FlatworldEnv(seed=42)
@@ -255,3 +272,5 @@ if __name__ == "__main__":
         print(
             f"action:{a},s_t:{s_before} ,s_t+1:{s}, reward:{r}, done:{done}, info:{info}")
         # rgb = env.render(mode = "rgb_array")
+
+
